@@ -4,7 +4,8 @@ namespace Controllers;
 
 use Exception;
 use Services\ProductService;
-
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class ProductController extends Controller
 {
@@ -83,5 +84,23 @@ class ProductController extends Controller
         }
 
         $this->respond(true);
+    }
+
+    private function checkForToken() {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? false;
+        
+        if (!$authHeader) {
+            $this->respondWithError(403, 'No Token Provided');
+            return false;
+        }
+        
+        $token = substr($authHeader, 7);
+        
+        try {
+            return $jwt = JWT::decode($token, new Key(getenv("SECRET"), 'HS256'));
+        } catch (Exception $e) {
+            $this->respondWithError(401, 'Invalid Credentials');
+            return;
+        }
     }
 }
